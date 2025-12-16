@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Movie Trailer</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            padding: 15px 20px;
+            background: #141414;
+            font-size: 18px;
+        }
+
+        .player {
+            width: 100%;
+            height: calc(100vh - 60px);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header" id="title">
+        Loading trailer...
+    </div>
+
+    <div class="player">
+        <iframe id="ytplayer"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <script>
+        const API_KEY = "cf82cc31179020147baaa87aabc6f31d";
+
+        // ambil movie_id dari URL
+        const params = new URLSearchParams(window.location.search);
+        const movieId = params.get("id");
+
+        if (!movieId) {
+            document.getElementById("title").innerText = "Movie ID not provided";
+            throw new Error("movie_id missing");
+        }
+
+        // ambil detail film (judul)
+        fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=en-US`)
+            .then(res => res.json())
+            .then(movie => {
+                document.getElementById("title").innerText =
+                    `▶ ${movie.title} — Trailer`;
+            });
+
+        // ambil video (trailer)
+        fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${API_KEY}&language=en-US`)
+            .then(res => res.json())
+            .then(data => {
+                // cari trailer YouTube
+                const trailer = data.results.find(v =>
+                    v.site === "YouTube" && v.type === "Trailer"
+                );
+
+                if (!trailer) {
+                    document.getElementById("title").innerText += " (No trailer found)";
+                    return;
+                }
+
+                document.getElementById("ytplayer").src =
+                    `https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0`;
+            });
+    </script>
+
+</body>
+
+</html>
